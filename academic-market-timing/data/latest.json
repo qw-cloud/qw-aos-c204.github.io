@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-10-04T20:47:00Z",
+  "date": "2026-10-04",
+  "status": "seed_snapshot",
+  "macro": {
+    "education_openings_rate": null,
+    "series": "JTU6100JOR",
+    "note": "Populated automatically by the daily workflow."
+  },
+  "model": {
+    "confidence": 5,
+    "market_forecast_30d": 50,
+    "market_forecast_90d": 50,
+    "note": "Seed snapshot only. Daily collection has just started; forecasts are held near neutral until enough longitudinal history accumulates."
+  },
+  "fields": [
+    {"slug":"computer-science-ai","name":"Computer Science & AI","jobs":317,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"health-medical","name":"Health & Medical","jobs":342,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"engineering","name":"Engineering & Technology","jobs":236,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"physical-environmental","name":"Physical & Environmental Sciences","jobs":236,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"biology","name":"Biological Sciences","jobs":290,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"math-statistics","name":"Mathematics & Statistics","jobs":145,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"psychology","name":"Psychology","jobs":125,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"business-management","name":"Business & Management","jobs":99,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"social-sciences","name":"Sociology, Demography & Social Sciences","jobs":106,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk broad-field proxy · seed"},
+    {"slug":"economics-finance","name":"Economics & Finance","jobs":69,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk + EJM enhancement · seed"},
+    {"slug":"politics-government","name":"Politics & Government","jobs":44,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"jobs.ac.uk · seed"},
+    {"slug":"humanities","name":"Humanities","jobs":143,"sentiment_score":50,"pressure_index":50,"timing_score":50,"forecast_30d":50,"forecast_90d":50,"job_momentum":null,"source_note":"History/philosophy + languages/literature · seed"}
+  ]
+}
