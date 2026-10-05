@@ -57,10 +57,10 @@
     "fields": [
       {
         "slug": "computer-science-ai",
-        "jobs": 298,
-        "sentiment_score": 56.7,
-        "pressure_index": 48.1,
-        "timing_score": 51.9
+        "jobs": 312,
+        "sentiment_score": 56.3,
+        "pressure_index": 48.2,
+        "timing_score": 51.8
       },
       {
         "slug": "health-medical",
@@ -72,34 +72,34 @@
       {
         "slug": "engineering",
         "jobs": null,
-        "sentiment_score": 57.4,
-        "pressure_index": 47.9,
-        "timing_score": 52.1
+        "sentiment_score": 57.3,
+        "pressure_index": 48.0,
+        "timing_score": 52.0
       },
       {
         "slug": "physical-environmental",
         "jobs": null,
-        "sentiment_score": 53.1,
-        "pressure_index": 49.1,
-        "timing_score": 50.9
+        "sentiment_score": 54.3,
+        "pressure_index": 48.8,
+        "timing_score": 51.2
       },
       {
         "slug": "biology",
-        "jobs": 275,
-        "sentiment_score": 54.0,
-        "pressure_index": 48.9,
-        "timing_score": 51.1
+        "jobs": 287,
+        "sentiment_score": 54.9,
+        "pressure_index": 48.6,
+        "timing_score": 51.4
       },
       {
         "slug": "math-statistics",
         "jobs": null,
-        "sentiment_score": 51.9,
-        "pressure_index": 49.5,
-        "timing_score": 50.5
+        "sentiment_score": 52.1,
+        "pressure_index": 49.4,
+        "timing_score": 50.6
       },
       {
         "slug": "psychology",
-        "jobs": 121,
+        "jobs": 133,
         "sentiment_score": 51.2,
         "pressure_index": 49.7,
         "timing_score": 50.3
@@ -113,7 +113,7 @@
       },
       {
         "slug": "social-sciences",
-        "jobs": 39,
+        "jobs": 42,
         "sentiment_score": 51.9,
         "pressure_index": 49.5,
         "timing_score": 50.5
@@ -121,21 +121,21 @@
       {
         "slug": "economics-finance",
         "jobs": 64,
-        "sentiment_score": 39.0,
-        "pressure_index": 53.1,
-        "timing_score": 46.9
+        "sentiment_score": 39.6,
+        "pressure_index": 52.9,
+        "timing_score": 47.1
       },
       {
         "slug": "politics-government",
         "jobs": null,
-        "sentiment_score": 54.0,
-        "pressure_index": 48.9,
-        "timing_score": 51.1
+        "sentiment_score": 54.3,
+        "pressure_index": 48.8,
+        "timing_score": 51.2
       },
       {
         "slug": "humanities",
         "jobs": 0,
-        "sentiment_score": 48.4,
+        "sentiment_score": 48.5,
         "pressure_index": 50.4,
         "timing_score": 49.6
       }
