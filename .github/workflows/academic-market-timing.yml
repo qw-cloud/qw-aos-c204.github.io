@@ -1,6 +1,11 @@
 name: Update Academic Market Timing
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/academic-market-timing.yml"
+      - "academic-market-timing/scripts/update_market.py"
   schedule:
     # 11:17 UTC daily; offset minute reduces top-of-hour congestion.
     - cron: "17 11 * * *"
