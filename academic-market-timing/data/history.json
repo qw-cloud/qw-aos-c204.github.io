@@ -1,8 +1,144 @@
 [
   {
-    "date":"2026-10-04",
-    "fields":[
-      {"slug":"computer-science-ai","timing_score":50},{"slug":"health-medical","timing_score":50},{"slug":"engineering","timing_score":50},{"slug":"physical-environmental","timing_score":50},{"slug":"biology","timing_score":50},{"slug":"math-statistics","timing_score":50},{"slug":"psychology","timing_score":50},{"slug":"business-management","timing_score":50},{"slug":"social-sciences","timing_score":50},{"slug":"economics-finance","timing_score":50},{"slug":"politics-government","timing_score":50},{"slug":"humanities","timing_score":50}
+    "date": "2026-10-04",
+    "fields": [
+      {
+        "slug": "computer-science-ai",
+        "timing_score": 50
+      },
+      {
+        "slug": "health-medical",
+        "timing_score": 50
+      },
+      {
+        "slug": "engineering",
+        "timing_score": 50
+      },
+      {
+        "slug": "physical-environmental",
+        "timing_score": 50
+      },
+      {
+        "slug": "biology",
+        "timing_score": 50
+      },
+      {
+        "slug": "math-statistics",
+        "timing_score": 50
+      },
+      {
+        "slug": "psychology",
+        "timing_score": 50
+      },
+      {
+        "slug": "business-management",
+        "timing_score": 50
+      },
+      {
+        "slug": "social-sciences",
+        "timing_score": 50
+      },
+      {
+        "slug": "economics-finance",
+        "timing_score": 50
+      },
+      {
+        "slug": "politics-government",
+        "timing_score": 50
+      },
+      {
+        "slug": "humanities",
+        "timing_score": 50
+      }
+    ]
+  },
+  {
+    "date": "2026-10-05",
+    "fields": [
+      {
+        "slug": "computer-science-ai",
+        "jobs": 298,
+        "sentiment_score": 56.7,
+        "pressure_index": 48.1,
+        "timing_score": 51.9
+      },
+      {
+        "slug": "health-medical",
+        "jobs": null,
+        "sentiment_score": 44.1,
+        "pressure_index": 51.7,
+        "timing_score": 48.3
+      },
+      {
+        "slug": "engineering",
+        "jobs": null,
+        "sentiment_score": 57.4,
+        "pressure_index": 47.9,
+        "timing_score": 52.1
+      },
+      {
+        "slug": "physical-environmental",
+        "jobs": null,
+        "sentiment_score": 53.1,
+        "pressure_index": 49.1,
+        "timing_score": 50.9
+      },
+      {
+        "slug": "biology",
+        "jobs": 275,
+        "sentiment_score": 54.0,
+        "pressure_index": 48.9,
+        "timing_score": 51.1
+      },
+      {
+        "slug": "math-statistics",
+        "jobs": null,
+        "sentiment_score": 51.9,
+        "pressure_index": 49.5,
+        "timing_score": 50.5
+      },
+      {
+        "slug": "psychology",
+        "jobs": 121,
+        "sentiment_score": 51.2,
+        "pressure_index": 49.7,
+        "timing_score": 50.3
+      },
+      {
+        "slug": "business-management",
+        "jobs": null,
+        "sentiment_score": 49.0,
+        "pressure_index": 50.3,
+        "timing_score": 49.7
+      },
+      {
+        "slug": "social-sciences",
+        "jobs": 39,
+        "sentiment_score": 51.9,
+        "pressure_index": 49.5,
+        "timing_score": 50.5
+      },
+      {
+        "slug": "economics-finance",
+        "jobs": 64,
+        "sentiment_score": 39.0,
+        "pressure_index": 53.1,
+        "timing_score": 46.9
+      },
+      {
+        "slug": "politics-government",
+        "jobs": null,
+        "sentiment_score": 54.0,
+        "pressure_index": 48.9,
+        "timing_score": 51.1
+      },
+      {
+        "slug": "humanities",
+        "jobs": 0,
+        "sentiment_score": 48.4,
+        "pressure_index": 50.4,
+        "timing_score": 49.6
+      }
     ]
   }
 ]
