@@ -1,0 +1,8 @@
+[
+  {
+    "date":"2026-10-04",
+    "fields":[
+      {"slug":"computer-science-ai","timing_score":50},{"slug":"health-medical","timing_score":50},{"slug":"engineering","timing_score":50},{"slug":"physical-environmental","timing_score":50},{"slug":"biology","timing_score":50},{"slug":"math-statistics","timing_score":50},{"slug":"psychology","timing_score":50},{"slug":"business-management","timing_score":50},{"slug":"social-sciences","timing_score":50},{"slug":"economics-finance","timing_score":50},{"slug":"politics-government","timing_score":50},{"slug":"humanities","timing_score":50}
+    ]
+  }
+]
