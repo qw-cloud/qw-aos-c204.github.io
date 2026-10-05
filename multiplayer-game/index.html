@@ -56,111 +56,121 @@
     <div class="game-footer"><span id="youAre">You are Player 1</span><button id="restartBtn" class="ghost hidden">Play again</button></div>
   </section>
 
-  <footer><span>Signal Sprint</span><span>Peer-to-peer multiplayer powered by WebRTC</span></footer>
+  <footer><span>Signal Sprint</span><span>Real-time multiplayer over secure WebSockets</span></footer>
 </main>
 
-<script type="module">
-import {joinRoom} from 'https://esm.run/trystero';
-
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
 (function(){
   "use strict";
-  const WIN_SCORE=10, WRONG_LOCK_MS=750, NEXT_ROUND_MS=900;
-  const APP_ID="signal-sprint-qw-cloud-v2-20261005";
-  const $=id=>document.getElementById(id);
-  const el={setupCard:$("setupCard"),lobbyCard:$("lobbyCard"),gameCard:$("gameCard"),hostName:$("hostName"),guestName:$("guestName"),roomInput:$("roomInput"),createBtn:$("createBtn"),joinBtn:$("joinBtn"),setupMessage:$("setupMessage"),connectionBadge:$("connectionBadge"),roomCode:$("roomCode"),copyCodeBtn:$("copyCodeBtn"),hostLabel:$("hostLabel"),guestLabel:$("guestLabel"),lobbyStatus:$("lobbyStatus"),startBtn:$("startBtn"),leaveBtn:$("leaveBtn"),scoreHostName:$("scoreHostName"),scoreGuestName:$("scoreGuestName"),hostScore:$("hostScore"),guestScore:$("guestScore"),roundNumber:$("roundNumber"),targetNumber:$("targetNumber"),numberGrid:$("numberGrid"),gameMessage:$("gameMessage"),youAre:$("youAre"),restartBtn:$("restartBtn")};
+  var WIN_SCORE=10, WRONG_LOCK_MS=750, NEXT_ROUND_MS=900;
+  var BROKER="wss://broker.emqx.io:8084/mqtt";
+  var APP_TOPIC="signal-sprint-qw-cloud-v3";
+  function $(id){return document.getElementById(id)}
+  var el={setupCard:$("setupCard"),lobbyCard:$("lobbyCard"),gameCard:$("gameCard"),hostName:$("hostName"),guestName:$("guestName"),roomInput:$("roomInput"),createBtn:$("createBtn"),joinBtn:$("joinBtn"),setupMessage:$("setupMessage"),connectionBadge:$("connectionBadge"),roomCode:$("roomCode"),copyCodeBtn:$("copyCodeBtn"),hostLabel:$("hostLabel"),guestLabel:$("guestLabel"),lobbyStatus:$("lobbyStatus"),startBtn:$("startBtn"),leaveBtn:$("leaveBtn"),scoreHostName:$("scoreHostName"),scoreGuestName:$("scoreGuestName"),hostScore:$("hostScore"),guestScore:$("guestScore"),roundNumber:$("roundNumber"),targetNumber:$("targetNumber"),numberGrid:$("numberGrid"),gameMessage:$("gameMessage"),youAre:$("youAre"),restartBtn:$("restartBtn")};
 
-  let role=null, room=null, action=null, roomCode=null, localName="Player";
-  let hostPeerId=null, guestPeerId=null, localLockedUntil=0, nextRoundTimer=null, joinTimer=null;
-  let hostCooldownUntil=0, guestCooldownUntil=0, state=freshState();
+  var role=null,client=null,topic=null,roomCode=null,localName="Player";
+  var clientId=randomId(),hostId=null,guestId=null,heartbeat=null,joinTimer=null,nextRoundTimer=null;
+  var localLockedUntil=0,hostCooldownUntil=0,guestCooldownUntil=0,state=freshState();
 
   function freshState(){return{status:"lobby",hostName:"Player 1",guestName:null,hostScore:0,guestScore:0,round:0,target:null,board:[],roundOpen:false,winner:null,message:"Waiting for both players…"}}
-  function sanitizeName(v,f){const c=String(v||"").trim().replace(/[<>]/g,"").slice(0,18);return c||f}
-  function generateRoomCode(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let code="";for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];return code}
-  function shuffledBoard(){const nums=Array.from({length:12},(_,i)=>i+1);for(let j=nums.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[nums[j],nums[k]]=[nums[k],nums[j]]}return nums}
+  function randomId(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-5)}
+  function sanitizeName(v,f){var c=String(v||"").trim().replace(/[<>]/g,"").slice(0,18);return c||f}
+  function generateRoomCode(){var chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",code="";for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];return code}
+  function shuffledBoard(){var nums=[];for(var i=1;i<=12;i++)nums.push(i);for(var j=nums.length-1;j>0;j--){var k=Math.floor(Math.random()*(j+1)),t=nums[j];nums[j]=nums[k];nums[k]=t}return nums}
   function setConnection(text,kind){el.connectionBadge.textContent=text;el.connectionBadge.className="badge "+kind}
-  function showOnly(section){[el.setupCard,el.lobbyCard,el.gameCard].forEach(x=>x.classList.add("hidden"));section.classList.remove("hidden")}
-  function safeSend(data,target){if(!action)return;const opts=target?{target}:undefined;Promise.resolve(action.send(data,opts)).catch(err=>console.warn("Send failed",err))}
+  function showOnly(section){[el.setupCard,el.lobbyCard,el.gameCard].forEach(function(x){x.classList.add("hidden")});section.classList.remove("hidden")}
+  function publish(payload){
+    if(!client||!client.connected||!topic)return;
+    payload.sender=clientId;payload.role=role;payload.ts=Date.now();
+    client.publish(topic,JSON.stringify(payload),{qos:1,retain:false});
+  }
+  function targeted(payload,target){payload.target=target;publish(payload)}
+  function isForMe(msg){return !msg.target||msg.target===clientId}
 
-  function enterRoom(){
-    try{
-      room=joinRoom({appId:APP_ID},"signal-sprint-"+roomCode.toLowerCase());
-      action=room.makeAction("game");
-      action.onMessage=(data,{peerId})=>handleMessage(data,peerId);
+  function connectBroker(onReady){
+    if(typeof mqtt==="undefined"){el.setupMessage.textContent="Multiplayer library failed to load. Refresh and try again.";setConnection("Offline","offline");return}
+    setConnection("Connecting…","connecting");
+    client=mqtt.connect(BROKER,{clientId:"ss_"+clientId,clean:true,connectTimeout:10000,reconnectPeriod:1500,keepalive:30,protocolVersion:4});
+    client.on("connect",function(){
+      client.subscribe(topic,{qos:1},function(err){
+        if(err){showNetworkError("Could not join the room channel.");return}
+        onReady();
+      });
+    });
+    client.on("message",function(receivedTopic,buffer){
+      if(receivedTopic!==topic)return;
+      var msg;try{msg=JSON.parse(buffer.toString())}catch(e){return}
+      if(!msg||msg.sender===clientId||!isForMe(msg))return;
+      handleMessage(msg);
+    });
+    client.on("reconnect",function(){setConnection("Reconnecting…","connecting")});
+    client.on("offline",function(){setConnection("Offline","offline")});
+    client.on("error",function(err){console.warn("MQTT error",err);});
+  }
 
-      room.onPeerJoin=peerId=>{
-        if(role==="host"){
-          if(guestPeerId && guestPeerId!==peerId){safeSend({type:"room-full"},peerId);return}
-          guestPeerId=peerId;
-          setConnection("Connected","online");
-          safeSend({type:"host-ready",state},peerId);
-        }else{
-          if(hostPeerId && hostPeerId!==peerId)return;
-          hostPeerId=peerId;
-          clearTimeout(joinTimer);
-          setConnection("Connected","online");
-          safeSend({type:"hello",name:localName},peerId);
-          el.lobbyStatus.textContent="Connected. Waiting for Player 1 to start…";
-        }
-      };
-
-      room.onPeerLeave=peerId=>{
-        if(role==="host" && peerId===guestPeerId){
-          guestPeerId=null;state.guestName=null;setConnection("Room ready","online");
-          if(state.status==="lobby"){renderLobby()}else{setGameMessage("Player 2 disconnected. Return to the lobby to reconnect.","bad")}
-        }else if(role==="guest" && peerId===hostPeerId){
-          hostPeerId=null;setConnection("Disconnected","offline");
-          if(state.status==="lobby")el.lobbyStatus.textContent="Player 1 disconnected. Leave and rejoin a new room.";
-          else setGameMessage("Player 1 disconnected.","bad");
-        }
-      };
-    }catch(err){
-      console.error(err);cleanupConnection();showOnly(el.setupCard);setConnection("Offline","offline");
-      el.setupMessage.textContent="Could not start multiplayer networking. Refresh the page and try again.";
-    }
+  function showNetworkError(text){
+    setConnection("Offline","offline");
+    if(el.setupCard.classList.contains("hidden"))el.lobbyStatus.textContent=text;
+    else el.setupMessage.textContent=text;
   }
 
   function createRoom(){
-    cleanupConnection();role="host";localName=sanitizeName(el.hostName.value,"Player 1");roomCode=generateRoomCode();
-    state=freshState();state.hostName=localName;el.setupMessage.textContent="";
-    enterRoom();showLobby();setConnection("Room ready","online");el.lobbyStatus.textContent="Share the room code with Player 2.";
+    cleanupConnection(false);role="host";localName=sanitizeName(el.hostName.value,"Player 1");roomCode=generateRoomCode();topic=APP_TOPIC+"/rooms/"+roomCode.toLowerCase();state=freshState();state.hostName=localName;hostId=clientId;guestId=null;el.setupMessage.textContent="";
+    showLobby();el.lobbyStatus.textContent="Connecting room…";
+    connectBroker(function(){
+      setConnection("Room ready","online");el.lobbyStatus.textContent="Waiting for Player 2…";
+      announceHost();
+      heartbeat=setInterval(announceHost,1500);
+    });
   }
 
   function joinRoomByCode(){
-    cleanupConnection();role="guest";localName=sanitizeName(el.guestName.value,"Player 2");roomCode=String(el.roomInput.value||"").trim().toUpperCase();
+    cleanupConnection(false);role="guest";localName=sanitizeName(el.guestName.value,"Player 2");roomCode=String(el.roomInput.value||"").trim().toUpperCase();
     if(!/^[A-Z2-9]{6}$/.test(roomCode)){el.setupMessage.textContent="Enter the 6-character room code from Player 1.";return}
-    el.setupMessage.textContent="";setConnection("Finding room…","connecting");enterRoom();showLobby();
-    el.lobbyStatus.textContent="Looking for Player 1…";
-    joinTimer=setTimeout(()=>{
-      if(role==="guest"&&!hostPeerId){
-        setConnection("Not found","offline");
-        el.lobbyStatus.textContent="No Player 1 found yet. Check the code, make sure Player 1 keeps the room open, then leave and try again.";
-      }
-    },12000);
+    topic=APP_TOPIC+"/rooms/"+roomCode.toLowerCase();state=freshState();hostId=null;guestId=clientId;el.setupMessage.textContent="";
+    showLobby();el.lobbyStatus.textContent="Connecting to multiplayer service…";
+    connectBroker(function(){
+      setConnection("Finding room…","connecting");el.lobbyStatus.textContent="Looking for Player 1…";
+      publish({type:"hello",name:localName});
+      joinTimer=setTimeout(function(){
+        if(role==="guest"&&!hostId){
+          setConnection("Not found","offline");
+          el.lobbyStatus.textContent="Room not found. Check the code and make sure Player 1 still has the room open.";
+        }
+      },10000);
+    });
   }
 
-  function handleMessage(data,peerId){
-    if(!data||typeof data!=="object")return;
+  function announceHost(){
+    if(role==="host"&&client&&client.connected)publish({type:"host-ready",hostName:state.hostName,status:state.status});
+  }
+
+  function handleMessage(msg){
     if(role==="host"){
-      if(peerId!==guestPeerId)return;
-      if(data.type==="hello"){
-        state.guestName=sanitizeName(data.name,"Player 2");state.message="Both players are ready.";
-        renderLobby();broadcastState();
-      }else if(data.type==="click")validateClick("guest",Number(data.value));
-      else if(data.type==="restart-request"&&state.status==="finished")startMatch();
+      if(msg.type==="hello"){
+        if(guestId&&guestId!==msg.sender){targeted({type:"room-full"},msg.sender);return}
+        guestId=msg.sender;state.guestName=sanitizeName(msg.name,"Player 2");state.message="Both players are ready.";
+        setConnection("Connected","online");renderLobby();broadcastState();
+      }else if(msg.sender===guestId&&msg.type==="click")validateClick("guest",Number(msg.value));
+      else if(msg.sender===guestId&&msg.type==="restart-request"&&state.status==="finished")startMatch();
+      else if(msg.sender===guestId&&msg.type==="guest-left"){guestId=null;state.guestName=null;setConnection("Room ready","online");if(state.status==="lobby")renderLobby()}
       return;
     }
 
-    if(data.type==="room-full"){
-      el.lobbyStatus.textContent="That room already has two players.";setConnection("Room full","offline");return;
-    }
-    if(hostPeerId && peerId!==hostPeerId)return;
-    if(!hostPeerId)hostPeerId=peerId;
-    if(data.type==="host-ready"){
-      state=data.state||state;safeSend({type:"hello",name:localName},peerId);renderLobby();
-    }else if(data.type==="state"){
-      state=data.state;renderState();
-    }else if(data.type==="feedback"&&data.kind==="wrong"){
+    if(msg.type==="host-ready"){
+      if(hostId&&hostId!==msg.sender)return;
+      hostId=msg.sender;clearTimeout(joinTimer);setConnection("Connected","online");
+      publish({type:"hello",name:localName,target:hostId});
+      if(state.status==="lobby"){el.hostLabel.textContent=sanitizeName(msg.hostName,"Player 1");el.lobbyStatus.textContent="Connected. Waiting for Player 1 to start…"}
+    }else if(msg.type==="state"&&(!hostId||msg.sender===hostId)){
+      hostId=msg.sender;state=msg.state;renderState();
+    }else if(msg.type==="feedback"&&msg.sender===hostId&&msg.kind==="wrong"){
       localLockedUntil=Date.now()+WRONG_LOCK_MS;setGameMessage("Wrong number — briefly locked.","bad");updateGridLock();setTimeout(updateGridLock,WRONG_LOCK_MS+30);
+    }else if(msg.type==="room-full"){
+      setConnection("Room full","offline");el.lobbyStatus.textContent="That room already has two players.";
+    }else if(msg.type==="host-left"&&msg.sender===hostId){
+      setConnection("Disconnected","offline");if(state.status==="lobby")el.lobbyStatus.textContent="Player 1 left the room.";else setGameMessage("Player 1 left the room.","bad");
     }
   }
 
@@ -172,7 +182,7 @@ import {joinRoom} from 'https://esm.run/trystero';
       el.startBtn.classList.toggle("hidden",!state.guestName);
     }else{
       el.startBtn.classList.add("hidden");
-      if(hostPeerId)el.lobbyStatus.textContent=state.guestName?"Connected. Waiting for Player 1 to start…":"Connected. Syncing players…";
+      if(hostId)el.lobbyStatus.textContent=state.guestName?"Connected. Waiting for Player 1 to start…":"Connected. Syncing players…";
     }
   }
 
@@ -182,57 +192,63 @@ import {joinRoom} from 'https://esm.run/trystero';
   function localClick(value){
     if(state.status!=="playing"||!state.roundOpen||Date.now()<localLockedUntil)return;
     if(role==="host")validateClick("host",value);
-    else if(hostPeerId){
+    else if(hostId){
       if(value!==state.target){localLockedUntil=Date.now()+WRONG_LOCK_MS;setGameMessage("Wrong number — briefly locked.","bad");updateGridLock();setTimeout(updateGridLock,WRONG_LOCK_MS+30)}
-      safeSend({type:"click",value},hostPeerId);
+      targeted({type:"click",value:value},hostId);
     }
   }
 
   function validateClick(player,value){
     if(role!=="host"||state.status!=="playing"||!state.roundOpen)return;
-    const now=Date.now(),cooling=player==="host"?hostCooldownUntil:guestCooldownUntil;if(now<cooling)return;
+    var now=Date.now(),cooling=player==="host"?hostCooldownUntil:guestCooldownUntil;if(now<cooling)return;
     if(value!==state.target){
-      const until=now+WRONG_LOCK_MS;
+      var until=now+WRONG_LOCK_MS;
       if(player==="host"){hostCooldownUntil=until;localLockedUntil=until;setGameMessage("Wrong number — briefly locked.","bad");updateGridLock();setTimeout(updateGridLock,WRONG_LOCK_MS+30)}
-      else{guestCooldownUntil=until;if(guestPeerId)safeSend({type:"feedback",kind:"wrong"},guestPeerId)}
+      else{guestCooldownUntil=until;if(guestId)targeted({type:"feedback",kind:"wrong"},guestId)}
       return;
     }
     state.roundOpen=false;if(player==="host")state.hostScore+=1;else state.guestScore+=1;
-    const scorerName=player==="host"?state.hostName:state.guestName;state.message=scorerName+" wins the round!";
+    var scorerName=player==="host"?state.hostName:state.guestName;state.message=scorerName+" wins the round!";
     if(state.hostScore>=WIN_SCORE||state.guestScore>=WIN_SCORE){
-      state.status="finished";state.winner=state.hostScore>=WIN_SCORE?"host":"guest";
-      state.message=(state.winner==="host"?state.hostName:state.guestName)+" wins the match!";
+      state.status="finished";state.winner=state.hostScore>=WIN_SCORE?"host":"guest";state.message=(state.winner==="host"?state.hostName:state.guestName)+" wins the match!";
       broadcastState();renderState();return;
     }
     broadcastState();renderState();nextRoundTimer=setTimeout(beginRound,NEXT_ROUND_MS);
   }
 
-  function broadcastState(){if(role==="host"&&guestPeerId)safeSend({type:"state",state},guestPeerId)}
+  function broadcastState(){if(role==="host"&&guestId)targeted({type:"state",state:state},guestId)}
   function renderState(){
     if(state.status==="lobby"){showLobby();return}
-    showOnly(el.gameCard);el.scoreHostName.textContent=state.hostName||"Player 1";el.scoreGuestName.textContent=state.guestName||"Player 2";
-    el.hostScore.textContent=state.hostScore;el.guestScore.textContent=state.guestScore;el.roundNumber.textContent=Math.max(1,state.round);
-    el.targetNumber.textContent=state.target==null?"?":state.target;
-    el.youAre.textContent=role==="host"?"You are "+state.hostName+" · Player 1":"You are "+(state.guestName||localName)+" · Player 2";
-    renderBoard();
+    showOnly(el.gameCard);el.scoreHostName.textContent=state.hostName||"Player 1";el.scoreGuestName.textContent=state.guestName||"Player 2";el.hostScore.textContent=state.hostScore;el.guestScore.textContent=state.guestScore;el.roundNumber.textContent=Math.max(1,state.round);el.targetNumber.textContent=state.target==null?"?":state.target;
+    el.youAre.textContent=role==="host"?"You are "+state.hostName+" · Player 1":"You are "+(state.guestName||localName)+" · Player 2";renderBoard();
     if(state.status==="finished"){
-      const won=(role==="host"&&state.winner==="host")||(role==="guest"&&state.winner==="guest");
+      var won=(role==="host"&&state.winner==="host")||(role==="guest"&&state.winner==="guest");
       setGameMessage(won?"You won the match!":(state.winner==="host"?state.hostName:state.guestName)+" wins the match.",won?"good":"bad");
       el.restartBtn.textContent=role==="host"?"Play again":"Request rematch";el.restartBtn.classList.remove("hidden");
     }else{setGameMessage(state.message||"Go!",state.roundOpen?"":"good");el.restartBtn.classList.add("hidden")}
     updateGridLock();
   }
-  function renderBoard(){el.numberGrid.innerHTML="";(state.board||[]).forEach(value=>{const btn=document.createElement("button");btn.className="number-tile";btn.type="button";btn.textContent=value;btn.setAttribute("aria-label","Number "+value);btn.addEventListener("click",()=>localClick(value));el.numberGrid.appendChild(btn)})}
-  function updateGridLock(){const locked=Date.now()<localLockedUntil||state.status!=="playing"||!state.roundOpen;el.numberGrid.classList.toggle("locked",locked);el.numberGrid.querySelectorAll("button").forEach(btn=>btn.disabled=locked)}
+
+  function renderBoard(){el.numberGrid.innerHTML="";(state.board||[]).forEach(function(value){var btn=document.createElement("button");btn.className="number-tile";btn.type="button";btn.textContent=value;btn.setAttribute("aria-label","Number "+value);btn.addEventListener("click",function(){localClick(value)});el.numberGrid.appendChild(btn)})}
+  function updateGridLock(){var locked=Date.now()<localLockedUntil||state.status!=="playing"||!state.roundOpen;el.numberGrid.classList.toggle("locked",locked);el.numberGrid.querySelectorAll("button").forEach(function(btn){btn.disabled=locked})}
   function setGameMessage(text,kind){el.gameMessage.textContent=text;el.gameMessage.className=("game-message "+(kind||"")).trim()}
-  function restart(){if(role==="host")startMatch();else if(hostPeerId){safeSend({type:"restart-request"},hostPeerId);setGameMessage("Rematch requested…","")}}
-  function leave(){cleanupConnection();role=null;roomCode=null;state=freshState();localLockedUntil=0;setConnection("Offline","offline");el.setupMessage.textContent="";showOnly(el.setupCard)}
-  function cleanupConnection(){clearTimeout(nextRoundTimer);clearTimeout(joinTimer);nextRoundTimer=null;joinTimer=null;try{if(room)room.leave()}catch(e){}room=null;action=null;hostPeerId=null;guestPeerId=null}
+  function restart(){if(role==="host")startMatch();else if(hostId){targeted({type:"restart-request"},hostId);setGameMessage("Rematch requested…","")}}
+
+  function leave(){
+    if(role==="host"&&client&&client.connected)publish({type:"host-left"});
+    if(role==="guest"&&client&&client.connected&&hostId)targeted({type:"guest-left"},hostId);
+    cleanupConnection(true);role=null;topic=null;roomCode=null;state=freshState();localLockedUntil=0;setConnection("Offline","offline");el.setupMessage.textContent="";showOnly(el.setupCard);
+  }
+  function cleanupConnection(force){
+    clearTimeout(nextRoundTimer);clearTimeout(joinTimer);clearInterval(heartbeat);nextRoundTimer=null;joinTimer=null;heartbeat=null;
+    if(client){try{client.end(!!force)}catch(e){}client=null}
+    hostId=null;guestId=null;
+  }
 
   el.createBtn.addEventListener("click",createRoom);el.joinBtn.addEventListener("click",joinRoomByCode);el.startBtn.addEventListener("click",startMatch);el.restartBtn.addEventListener("click",restart);el.leaveBtn.addEventListener("click",leave);
-  el.copyCodeBtn.addEventListener("click",()=>{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(roomCode||"").then(()=>{const old=el.copyCodeBtn.textContent;el.copyCodeBtn.textContent="Copied";setTimeout(()=>el.copyCodeBtn.textContent=old,1200)}).catch(()=>el.copyCodeBtn.textContent="Copy failed")}else{el.copyCodeBtn.textContent="Select code"}});
-  el.roomInput.addEventListener("input",()=>{el.roomInput.value=el.roomInput.value.toUpperCase().replace(/[^A-Z2-9]/g,"").slice(0,6)});
-  window.addEventListener("beforeunload",cleanupConnection);
+  el.copyCodeBtn.addEventListener("click",function(){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(roomCode||"").then(function(){var old=el.copyCodeBtn.textContent;el.copyCodeBtn.textContent="Copied";setTimeout(function(){el.copyCodeBtn.textContent=old},1200)}).catch(function(){el.copyCodeBtn.textContent="Copy failed"})}else{el.copyCodeBtn.textContent="Select code"}});
+  el.roomInput.addEventListener("input",function(){el.roomInput.value=el.roomInput.value.toUpperCase().replace(/[^A-Z2-9]/g,"").slice(0,6)});
+  window.addEventListener("beforeunload",function(){cleanupConnection(true)});
 })();
 </script>
 </body>
