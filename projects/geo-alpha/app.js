@@ -6,8 +6,7 @@ const statusNames={ok:'成功',cached:'缓存',watch:'观察',unavailable:'不�
 const badge=s=>'<span class="state '+(['ok','cached','usable_observation'].includes(s)?'':s==='unavailable'||s==='source_unavailable'?'bad':'warn')+'">'+esc(statusNames[s]||s)+'</span>';
 function safeURL(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#';}catch{return '#';}}
 let data=null,base=null,backtest=null,research=null,marketSeries=null,satelliteHistory=null;
-const REPO_NAME=location.pathname.startsWith('/qw-aos-c204.github.io/')?'qw-aos-c204.github.io':'qw-cloud.github.io';
-const RAW_BASE='https://raw.githubusercontent.com/qw-cloud/'+REPO_NAME+'/main/projects/geo-alpha/';
+const RAW_BASE='https://raw.githubusercontent.com/a2xw/w-cd.github.io/main/projects/geo-alpha/';
 async function readJSON(path){const base=location.hostname.endsWith('github.io')?RAW_BASE:'';const r=await fetch(base+path+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(path+': HTTP '+r.status);return r.json();}
 async function refresh(){
   $('refresh').disabled=true;
