@@ -16,7 +16,7 @@ from pathlib import Path
 
 UTC = timezone.utc
 ROOT = Path(__file__).resolve().parents[2]
-HEADERS = {"User-Agent": "GeoAlpha/0.1 (public geospatial research)", "Accept": "application/json"}
+HEADERS = {"User-Agent": "GeoAlpha/0.2 (public geospatial research)", "Accept": "application/json"}
 
 
 def now():
@@ -130,10 +130,10 @@ def nhc():
     return {"storms":storms,"url":url}
 
 
-def market(symbol):
+def market(symbol, history_range="5y"):
     last_error = None
     for host in ("query1", "query2"):
-        url = f"https://{host}.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range=1y&interval=1d"
+        url = f"https://{host}.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range={history_range}&interval=1d"
         try:
             obj = request_json(url, retries=1)
             result = obj["chart"]["result"][0]
@@ -184,28 +184,13 @@ def compute_ndvi(red, nir, scl, red_asset, nir_asset, rescaled=False):
             "grid":[[round(float(ndvi[y,x]),3) if valid[y,x] else None for x in range(red.shape[1])] for y in range(red.shape[0])]}
 
 
-def satellite(region, previous=None, check_hours=6):
-    import numpy as np
+def sample_item(region, f):
+    """Read actual pixels of one fixed region and one catalog item."""
     import rasterio
     from rasterio.enums import Resampling
     from rasterio.transform import from_bounds
     from rasterio.vrt import WarpedVRT
-    if previous and age_hours(previous["checked_at"]) < check_hours:
-        return {**previous,"cached":True}
-    query = {"collections":["sentinel-2-l2a"],"bbox":region["bbox"],"limit":8,
-             "datetime":f"{stamp(now()-timedelta(days=45))}/{stamp()}",
-             "sortby":[{"field":"properties.datetime","direction":"desc"}]}
-    obj = request_json("https://earth-search.aws.element84.com/v1/search",query)
-    features = obj.get("features",[])
-    if not features:
-        raise ValueError("No Sentinel-2 item covering region in last 45 days")
-    # Prefer a tile covering the whole AOI; partial-tile/cloud loss is still measured in the grid.
-    full = [f for f in features if f["bbox"][0] <= region["bbox"][0] and f["bbox"][1] <= region["bbox"][1]
-            and f["bbox"][2] >= region["bbox"][2] and f["bbox"][3] >= region["bbox"][3]]
-    f = (full or features)[0]
     checked = stamp()
-    if previous and f["id"] == previous.get("item_id"):
-        return {**previous,"checked_at":checked,"cached":True}
     arrays = {}
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif",GDAL_HTTP_TIMEOUT="25",GDAL_HTTP_MAX_RETRY="2"):
         for band in ("red","nir","scl"):
@@ -224,6 +209,24 @@ def satellite(region, previous=None, check_hours=6):
             "thumbnail":f["assets"].get("thumbnail",{}).get("href"),"rescaled_boa":rescaled,
             "url":f"https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/{f['id']}",
             "sample_grid_size":32,"scope":"local_land_cover_not_crop_classified","cached":False,**stats}
+
+
+def satellite(region, previous=None, check_hours=6):
+    if previous and age_hours(previous["checked_at"]) < check_hours:
+        return {**previous,"cached":True}
+    query = {"collections":["sentinel-2-l2a"],"bbox":region["bbox"],"limit":8,
+             "datetime":f"{stamp(now()-timedelta(days=45))}/{stamp()}",
+             "sortby":[{"field":"properties.datetime","direction":"desc"}]}
+    obj = request_json("https://earth-search.aws.element84.com/v1/search",query)
+    features = obj.get("features",[])
+    if not features:
+        raise ValueError("No Sentinel-2 item covering region in last 45 days")
+    full = [f for f in features if f["bbox"][0] <= region["bbox"][0] and f["bbox"][1] <= region["bbox"][1]
+            and f["bbox"][2] >= region["bbox"][2] and f["bbox"][3] >= region["bbox"][3]]
+    f = (full or features)[0]
+    if previous and f["id"] == previous.get("item_id"):
+        return {**previous,"checked_at":stamp(),"cached":True}
+    return sample_item(region,f)
 
 
 def quality(s, config, at=None):
@@ -374,5 +377,7 @@ def report(root=ROOT):
                       config["research"]["holding_sessions"],config["research"]["round_trip_cost_bps"]) for a in config["assets"]]
     obj = {"generated_at":stamp(),"status":"not_ready" if not any(r['trades'] for r in results) else "research_only",
            "reason":"仅观察信号尚不具备经验证的多空方向，故不生成虚构绩效。","results":results}
+    from .research import build_research_report
+    obj["baseline"] = build_research_report(root)
     save(root/"data"/"backtest.json",obj)
     return obj

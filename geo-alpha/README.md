@@ -9,7 +9,9 @@
 - 首次可用时间持久化，记录事件更新、来源失败、数据陈旧、云遮挡并自动降级。
 - 商品ETF与对应期货分开标注；不把ETF价格当成期货价格。
 - 地理事件自动关联暴露区域，生成可追溯观察卡片。
-- 提供日频、成本后、严格晚于信号可用时间的研究回放框架。
+- 格式化仪表盘：标的价格趋势、地理地图、真实 NDVI 像元、历史 NDVI、收益/回撤曲线、交易台账及全部卫星月度判断。
+- 五年行情基线与真实历史影像规则分开回测，日频盯市、下一开盘执行、双边成本及买入持有对照。
+- 历史影像按固定月份自动补齐并缓存；失败的采集会重试，不优化交易阈值。
 
 ## 明确的当前边界
 
@@ -26,6 +28,7 @@ Python 3.12：
 ```bash
 python -m pip install -r geo-alpha/requirements.txt
 PYTHONPATH=geo-alpha/src python -m geoalpha update
+PYTHONPATH=geo-alpha/src python -m geoalpha history
 PYTHONPATH=geo-alpha/src python -m geoalpha backtest
 PYTHONPATH=geo-alpha/src python -m unittest discover -s geo-alpha/tests -v
 python -m http.server 8000
@@ -35,13 +38,27 @@ python -m http.server 8000
 
 GitHub Actions工作流 `.github/workflows/geo-alpha.yml` 自动更新，目标每15分钟；GitHub调度可延迟，不保证硬实时。浏览器每60秒检查快照，超过60分钟显示陈旧。公开数据写入本仓库，不包含账户、订单或私钥。
 
-## 研究回放
+## 回测与首轮结果（v0.2）
 
-当前 `data/backtest.json` 的 `not_ready` 是真实状态：观察信号没有经验证的方向，所以收益和胜率保持空值。
+真实数据生成于 2026-10-09；原始结果在 `data/research_results.json`，历史影像证据在 `data/satellite_history.json`。参数在下载历史样本前固定，本次没有为触发交易调整阈值。
 
-外部研究模型冻结并完成样本外验证后，可输出 `data/research_signals.json`，包含 symbol、direction（-1或1）、available_at（带时区）、validated=true。validated是研究者声明，不是引擎替你证明盈利。回放只在信号之后的下一开盘成交；固定持有期与双边成本在配置中指定。
+卫星探索读取 2023–2026 年 5–8 月 Iowa/Illinois 两处局部影像，共 32 个合格样本。固定每月 20 日决策，以拍摄后 48 小时和目录创建时间的较晚者重建可用时点。两地区平均 NDVI 比上年同月下降至少 0.10 时，下一开盘做多 CORN/SOYB，持有 10 个交易日。2024–2026 的 12 次判断均未触发，两个标的交易数都是 0、空仓收益为 0、胜率与 Sharpe 不适用。**这些结果没有证明遥感交易优势。**
 
-这个轻量回放只报告交易结束时净值/回撤，不能替代完整每日盯市回撤、实盘成交、期货保证金、换月与期权回测。正式收益模型应使用许可清楚的历史行情、官方初次发布档案、气象预报版本和作物分类。
+行情基线仅用价格：前 20 日收盘均价高于前 60 日均价时，下一开盘做多，否则空仓；各边成本 10bps、无杠杆。2022-01-05 至 2026-10-08 的价格收益如下，不含分红、现金利息、税费及固定数据成本：
+
+| 标的 | 成本后净收益 | 最大每日收盘回撤 | 已平仓交易 |
+|---|---:|---:|---:|
+| CORN | +0.15% | -32.07% | 14 |
+| SOYB | -6.34% | -32.83% | 13 |
+| WEAT | -22.83% | -53.56% | 13 |
+| USO | +57.91% | -45.15% | 14 |
+| UNG | -60.81% | -80.26% | 12 |
+
+首轮表格是固定快照；仪表盘和 JSON 随新数据重算，显示最新日期。行情基线不是卫星策略收益，USO 本期也落后于同区间买入持有。没有样本外认证，不将回顾性结果解释成未来收益。
+
+`data/backtest.json` 的 `not_ready` 单独表示外部验证方向信号尚未接入；它不会遮盖 `research_results.json` 中已算出的探索性结果。外部模型可以输出 `data/research_signals.json`，包含 symbol、direction、available_at、validated=true；validated 是提供者声明，不能代替验证。这个旧接口是简化交易回放；新探索模块才提供每日净值和回撤。
+
+正式模型仍需作物掩膜、天气/官方报告基线、历史首次发布档案、滚动年份验证及期货实际合约/换月成本。免费 ETF 数据和局部样本不足以证明套利。
 
 ## 数据与许可
 
