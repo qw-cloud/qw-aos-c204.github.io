@@ -1,6 +1,4 @@
 ## Final Project: Automated Aircraft Detection in Satellite Imagery Using Deep Learning
-Qingyang (Frank) Wu
-
 Department of Environmental Health Science, UCLA
 
 AOS C204: Introduction to Machine Learning for the Physical Sciences
