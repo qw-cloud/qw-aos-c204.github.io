@@ -31,7 +31,7 @@ DATA = ROOT / "data"
 LATEST = DATA / "latest.json"
 HISTORY = DATA / "history.json"
 
-UA = "AcademicMarketTiming/1.0 (+https://github.com/qw-cloud)"
+UA = "AcademicMarketTiming/1.0 (+https://github.com/a2xw)"
 
 FIELDS = [
     {"slug":"computer-science-ai","name":"Computer Science & AI","jobs_label":"Computer Sciences","query":"computer science AI faculty hiring university"},
