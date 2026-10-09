@@ -1,6 +1,6 @@
 # GeoAlpha 地理信息观察台
 
-**Live:** https://qw-cloud.github.io/qw-aos-c204.github.io/projects/geo-alpha/
+**Live:** https://a2xw.github.io/w-cd.github.io/projects/geo-alpha/
 
 一个实际运行的公共数据产品：定时采集真实 Sentinel-2 像元、NASA 灾害目录、NOAA 风暴及指示行情，将变化锚定 CORN、SOYB、WEAT、USO、UNG，并明确对应期货 ZC、ZS、ZW、CL、NG。
 
@@ -32,7 +32,7 @@ python -m pip install -r projects/geo-alpha/requirements.txt
 PYTHONPATH=projects/geo-alpha/src python -m geoalpha update
 PYTHONPATH=projects/geo-alpha/src python -m geoalpha history
 PYTHONPATH=projects/geo-alpha/src python -m geoalpha backtest
-PYTHONPATH=projects/geo-alpha/src python -m unittest discover -s geo-alpha/tests -v
+PYTHONPATH=projects/geo-alpha/src python -m unittest discover -s projects/geo-alpha/tests -v
 python -m http.server 8000
 ```
 
