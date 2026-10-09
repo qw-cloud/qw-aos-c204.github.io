@@ -2,7 +2,7 @@
 
 A daily-updated academic labor-market timing dashboard.
 
-**Live app:** https://qw-cloud.github.io/qw-aos-c204.github.io/academic-market-timing/
+**Live app:** https://qw-cloud.github.io/projects/academic-market-timing/
 
 ## What it does
 

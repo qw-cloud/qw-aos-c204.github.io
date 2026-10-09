@@ -1,63 +1,39 @@
 # Qingyang (Frank) Wu — Research Systems Portfolio
 
-This repository is the public index for a growing collection of research and engineering projects.
-
-**Live portfolio:** https://qw-cloud.github.io/qw-aos-c204.github.io/
-
-## Current focus
-
-I am interested in building systems that turn messy signals into interpretable decisions:
-
-- longitudinal data products;
-- quantitative modeling and forecasting;
-- interactive research interfaces;
-- applied machine learning;
-- automated public-data pipelines.
+This repository is the home for my public research systems, quantitative tools, interactive experiments, and selected earlier work.
 
 ## Projects
 
-### Academic Market Timing
-**Live:** https://qw-cloud.github.io/qw-aos-c204.github.io/academic-market-timing/
+- **GeoAlpha** — `projects/geo-alpha/`
+- **Academic Market Timing** — `projects/academic-market-timing/`
+- **Signal Sprint** — `projects/signal-sprint/`
+- **AeroVision** — `projects/aerovision/`
 
-A daily-updated faculty hiring market timing system that combines field-level vacancy signals, hiring sentiment, macro labor-demand conditions, competition-pressure proxies, and forward timing scores.
+## Archive
 
-Directory: `academic-market-timing/`
+Original AOS C204 course artifacts are preserved under:
 
-### AeroVision
-**Live:** https://qw-cloud.github.io/qw-aos-c204.github.io/projects/aerovision/
+`archive/coursework/aos-c204/`
 
-An interactive visualization layer around an earlier satellite-imagery aircraft detection project using classical ML, CNNs, and a custom ResNet.
+The repository root is a portfolio. Active systems live under `projects/`; coursework lives under `archive/`.
 
-Directory: `projects/aerovision/`
-
-This project originated as coursework and is preserved as earlier work rather than defining the portfolio homepage.
-
-## Repository structure
+## Structure
 
 ```text
 /
 ├── index.html
 ├── styles.css
 ├── app.js
-│
-├── academic-market-timing/
-│   ├── index.html
-│   ├── styles.css
-│   ├── app.js
-│   ├── data/
-│   ├── scripts/
-│   └── README.md
-│
+├── README.md
 ├── projects/
+│   ├── geo-alpha/
+│   ├── academic-market-timing/
+│   ├── signal-sprint/
 │   └── aerovision/
-│       ├── index.html
-│       ├── styles.css
-│       ├── app.js
-│       └── README.md
-│
-└── .github/
-    └── workflows/
-        └── academic-market-timing.yml
+├── archive/
+│   └── coursework/
+│       └── aos-c204/
+│           ├── code.ipynb
+│           └── output/
+└── .github/workflows/
 ```
-
-The root is intentionally a portfolio index. Individual projects live in their own directories and can evolve independently.

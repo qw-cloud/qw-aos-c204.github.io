@@ -1,5 +1,7 @@
 # GeoAlpha 地理信息观察台
 
+**Live:** https://qw-cloud.github.io/projects/geo-alpha/
+
 一个实际运行的公共数据产品：定时采集真实 Sentinel-2 像元、NASA 灾害目录、NOAA 风暴及指示行情，将变化锚定 CORN、SOYB、WEAT、USO、UNG，并明确对应期货 ZC、ZS、ZW、CL、NG。
 
 ## 当前能力
@@ -26,15 +28,15 @@ NDVI是四个20公里左右试点窗口的32×32抽样地表指标，尚未识�
 Python 3.12：
 
 ```bash
-python -m pip install -r geo-alpha/requirements.txt
-PYTHONPATH=geo-alpha/src python -m geoalpha update
-PYTHONPATH=geo-alpha/src python -m geoalpha history
-PYTHONPATH=geo-alpha/src python -m geoalpha backtest
-PYTHONPATH=geo-alpha/src python -m unittest discover -s geo-alpha/tests -v
+python -m pip install -r projects/geo-alpha/requirements.txt
+PYTHONPATH=projects/geo-alpha/src python -m geoalpha update
+PYTHONPATH=projects/geo-alpha/src python -m geoalpha history
+PYTHONPATH=projects/geo-alpha/src python -m geoalpha backtest
+PYTHONPATH=projects/geo-alpha/src python -m unittest discover -s geo-alpha/tests -v
 python -m http.server 8000
 ```
 
-打开 http://localhost:8000/geo-alpha/ 。GitHub Pages界面从GitHub raw读取最新快照，避免Actions数据提交不触发Pages重建的问题；本地默认从本地JSON读取。
+打开 http://localhost:8000/projects/geo-alpha/ 。GitHub Pages界面从GitHub raw读取最新快照，避免Actions数据提交不触发Pages重建的问题；本地默认从本地JSON读取。
 
 GitHub Actions工作流 `.github/workflows/geo-alpha.yml` 自动更新，目标每15分钟；GitHub调度可延迟，不保证硬实时。浏览器每60秒检查快照，超过60分钟显示陈旧。公开数据写入本仓库，不包含账户、订单或私钥。
 
