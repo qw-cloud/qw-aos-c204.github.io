@@ -1,0 +1,68 @@
+name: GeoAlpha public-data refresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "geo-alpha/src/**"
+      - "geo-alpha/tests/**"
+      - "geo-alpha/config.json"
+      - "geo-alpha/requirements.txt"
+      - ".github/workflows/geo-alpha.yml"
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geo-alpha-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: geo-alpha/requirements.txt
+      - name: Install geospatial reader
+        run: python -m pip install -r geo-alpha/requirements.txt
+      - name: Validate data and replay integrity
+        env:
+          PYTHONPATH: geo-alpha/src
+        run: python -m unittest discover -s geo-alpha/tests -v
+      - name: Collect public observations and update research report
+        env:
+          PYTHONPATH: geo-alpha/src
+        run: |
+          python -m geoalpha update
+          python -m geoalpha backtest
+      - name: Preserve the update artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: geo-alpha-${{ github.run_id }}
+          path: geo-alpha/data/
+          retention-days: 30
+      - name: Commit only refreshed GeoAlpha data
+        run: |
+          git config user.name "geo-alpha-bot"
+          git config user.email "geo-alpha-bot@users.noreply.github.com"
+          git add geo-alpha/data/
+          if git diff --cached --quiet; then
+            echo "No data changes."
+            exit 0
+          fi
+          git commit -m "data: refresh GeoAlpha observations"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          exit 1
