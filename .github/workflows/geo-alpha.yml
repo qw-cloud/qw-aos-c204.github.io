@@ -42,6 +42,7 @@ jobs:
           PYTHONPATH: geo-alpha/src
         run: |
           python -m geoalpha update
+          python -m geoalpha history
           python -m geoalpha backtest
       - name: Preserve the update artifact
         uses: actions/upload-artifact@v4
