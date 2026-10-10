@@ -1,16 +1,12 @@
-# a2xw — Research Index
+# a2xw
 
-A public index for research systems, quantitative tools, interactive experiments, and selected earlier work.
+Building public research systems around data, quantitative modeling, remote sensing, automation, and interactive interfaces.
 
-## Repository model
+## Projects
 
-This repository is the portfolio/site shell. The projects currently staged here are being separated into independent repositories:
+- [GeoAlpha](https://github.com/a2xw/geo-alpha) — satellite observations, public hazard data, market exposure, and reproducible research.
+- [Academic Market Timing](https://github.com/a2xw/academic-market-timing) — a daily-updated academic hiring market signal system.
+- [Signal Sprint](https://github.com/a2xw/signal-sprint) — a lightweight real-time two-player browser game.
+- [AeroVision](https://github.com/a2xw/aerovision) — satellite-imagery aircraft detection and model diagnostics.
 
-- **GeoAlpha**
-- **Academic Market Timing**
-- **Signal Sprint**
-- **AeroVision**
-
-Course artifacts are retained only as an archive under `archive/coursework/`.
-
-No personal name is used in the public-facing portfolio.
+The public profile is intentionally pseudonymous.

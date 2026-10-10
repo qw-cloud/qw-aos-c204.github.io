@@ -1,1 +1,0 @@
-"""GeoAlpha: timestamped geospatial observations and research replay."""
